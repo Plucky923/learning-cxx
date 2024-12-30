@@ -1,4 +1,6 @@
 ﻿#include "../exercise.h"
+#include <cstdio>
+#include <cstring>
 
 // READ: 类模板 <https://zh.cppreference.com/w/cpp/language/class_template>
 
@@ -10,6 +12,12 @@ struct Tensor4D {
     Tensor4D(unsigned int const shape_[4], T const *data_) {
         unsigned int size = 1;
         // TODO: 填入正确的 shape 并计算 size
+        for (int i = 0; i < 4; ++i) {
+            shape[i] = shape_[i];
+        }
+        for (int i = 0; i < 4; ++i) {
+            size *= shape[i];
+        }
         data = new T[size];
         std::memcpy(data, data_, size * sizeof(T));
     }
@@ -28,6 +36,41 @@ struct Tensor4D {
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
         // TODO: 实现单向广播的加法
+        bool is_same_shape = true;
+        for(int i = 0; i < 4; ++i) {
+            if (shape[i] != others.shape[i]) {
+                is_same_shape = false;
+                break;
+            }
+        }
+        if (is_same_shape) {
+            unsigned int size = 1;
+            for (int i = 0; i < 4; ++i) {
+                size *= shape[i];
+            }
+            T *new_data = new T[size];
+            for (int i = 0; i < size; ++i) {
+                new_data[i] = data[i] + others.data[i];
+            }
+            delete[] data;
+            data = new_data;
+        } else {
+            unsigned int size = 1;
+            unsigned int size_others = 1;
+            unsigned int times;
+            for (int i = 0; i < 4; ++i) {
+                size *= shape[i];
+                size_others *= others.shape[i];
+            }
+            times = size / size_others;
+            T *new_data = new T[size];
+            for (int i = 0; i < size; ++i) {
+                new_data[i] = data[i] + others.data[i / times];
+                printf("%d %d %d\n", i, i % times, times);
+            }
+            delete[] data;
+            data = new_data;
+        }
         return *this;
     }
 };
